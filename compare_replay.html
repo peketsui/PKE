@@ -4,108 +4,90 @@
     </head>
     <body>
         <div class="videos">
-            <video id="mov1" src="./video1.mp4" controls width="50%"></video><input type="text" id="text_v1" value="selected" readonly></textarea>
-            <video id="mov2" src="./video2.mp4" controls width="50%"></video><input type="text" id="text_v2" value="selected" readonly></input type="text">
+            <video id="mov1" src="./video1.mp4" controls width="50%"></video><button id="prev-frame_video1">戻る</button><button id="next-frame_video1">進む</button><br>
+            <video id="mov2" src="./video2.mp4" controls width="50%"></video><button id="prev-frame_video2">戻る</button><button id="next-frame_video2">進む</button><br>
         </div>
-        <button id="prev-frame">戻る</button>
-        <button id="next-frame">進む</button>
-        <button id="play">PLAY</button>
-        <button id="select_video1">select_video1</button>
-        <button id="select_video2">select_video2</button>
-        <input type="file" id="upvideo" accept="video/mp4">
-        <br>
-        <input type="range">
+            <button id="play">PLAY</button>
+            <button id="is_ready_compare">compare</button>
+            <input type="file" id="upvideo" accept="video/mp4">
+            <br>
+            <input type="range" id="seek_bar" value="0" min="0" max="1000" style="visibility: hidden;">
+        </div>
+
         <script>
             var video1 = document.getElementById('mov1');
             var video2 = document.getElementById('mov2');
-            var text_v1 = document.getElementById('text_v1');
-            var text_v2 = document.getElementById('text_v2');
             var play_button = document.getElementById('play')
-            var prevFrame = document.getElementById('prev-frame');
-            var nextFrame = document.getElementById('next-frame');
-            var select_video1 = document.getElementById('select_video1');
-            var select_video2 = document.getElementById('select_video2');
+            var prevFrame_video1 = document.getElementById('prev-frame_video1');
+            var nextFrame_video1 = document.getElementById('next-frame_video1');
+            var prevFrame_video2 = document.getElementById('prev-frame_video2');
+            var nextFrame_video2 = document.getElementById('next-frame_video2');
+            var compare_button = document.getElementById('is_ready_compare');
+            var seek_bar = document.getElementById('seek_bar');
             var frameRate = 1/30;
 
-            var is_video1_selected = new Boolean(true);
-            var is_video2_selected = new Boolean(true);
-
+            var is_ready_compare = false;
             var upvideo = document.getElementById('upvideo');
 
             video1.onloadedmetadata = function(){
                 //next
-                nextFrame.addEventListener('click',function(){
-                    console.log('pushed next');
-                    if (select_video1) {
-                        video1.currentTime = Math.min(video1.duration, video1.currentTime+frameRate);
-                    }
+                nextFrame_video1.addEventListener('click',function(){
+                    video1.currentTime = Math.min(video1.duration, video1.currentTime+frameRate);
                 });
 
                 //prev
-                prevFrame.addEventListener('click',function(){
-                    console.log('pushed prev');
-                    if (select_video1) {
-                        video1.currentTime = Math.max(0, video1.currentTime-frameRate);
-                    }
+                prevFrame_video1.addEventListener('click',function(){
+                    video1.currentTime = Math.max(0, video1.currentTime-frameRate);
                 });
             }
             video2.onloadedmetadata = function(){
                 //next
-                nextFrame.addEventListener('click',function(){
-                    if (select_video2) {
-                        video2.currentTime = Math.min(video2.duration, video2.currentTime+frameRate);
-                    }
+                nextFrame_video2.addEventListener('click',function(){
+                    video2.currentTime = Math.min(video2.duration, video2.currentTime+frameRate);
                 });
 
                 //prev
-                prevFrame.addEventListener('click',function(){
-                    if (select_video2) {
-                        video2.currentTime = Math.max(0, video2.currentTime-frameRate);
-                    }
+                prevFrame_video2.addEventListener('click',function(){
+                    video2.currentTime = Math.max(0, video2.currentTime-frameRate);
                 });
             }
 
             play_button.onclick = function() {
 
-                if (video1.paused && video2.paused) {
-
-                    if (select_video1) {
+                if (is_ready_compare) {
+                    
+                    if (video1.paused && video2.paused) {
                         video1.play();
-                    }
-
-                    if (select_video2) {
                         video2.play();
+
+                        return
                     }
-                    return;
                 }
 
                 video1.pause();
                 video2.pause();
             }
 
-            select_video1.onclick = function() {
-                select_video1 = !select_video1;
-                if (select_video1) {
-                    text_v1.value = "selected"
-                }
-                else {
-                    text_v1.value = ""
-                }
-            }
-
-            select_video2.onclick = function() {
-                select_video2 = !select_video2;
-                if (select_video2) {
-                    text_v2.value = "selected"
-                }
-                else {
-                    text_v2.value = ""
-                }
-            }
-
             upvideo.onchange = function() {
                 console.log(upvideo.value);
                 video1.src = upvideo.value;
+            }
+
+            compare_button.onclick = function() {
+
+                if (!video1.paused || !video2.paused){
+                    return;
+                }
+
+                is_ready_compare = !is_ready_compare;
+
+                if (is_ready_compare) {
+                    compare_button.style = "color:#ffffff;background-color:#0000ff;";
+                    seek_bar.style = "visibility: visible;"
+                } else {
+                    compare_button.style = "";
+                    seek_bar.style = "visibility: hidden;"
+                }
             }
         </script>
     </body>
