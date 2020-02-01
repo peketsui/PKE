@@ -4,17 +4,30 @@
     </head>
     <body>
         <div class="videos">
-            <video id="mov1" src="./video1.mp4" controls width="50%"></video><button id="prev-frame_video1">戻る</button><button id="next-frame_video1">進む</button><br>
-            <video id="mov2" src="./video2.mp4" controls width="50%"></video><button id="prev-frame_video2">戻る</button><button id="next-frame_video2">進む</button><br>
+            <video id="mov1" src="" controls width="45%"></video>
+            <input id="video1_path" type="text" placeholder="Enter full-path of video file">
+            <button id="get_video1">video1</button><button id="quit_video1">quit</button><br>
+            <button id="prev-frame_video1">&laquo;</button><button id="next-frame_video1">&raquo;</button><br>
+            <video id="mov2" src="" controls width="45%"></video>
+            <input id="video2_path" type="text" placeholder="Enter full-path of video file">
+            <button id="get_video2">video2</button><button id="quit_video2">quit</button><br>
+            <button id="prev-frame_video2">&laquo;</button><button id="next-frame_video2">&raquo;</button><br>
         </div>
-            <button id="play">PLAY</button>
+        <div class="compare_component">
             <button id="is_ready_compare">compare</button>
-            <input type="file" id="upvideo" accept="video/mp4">
             <br>
-            <input type="range" id="seek_bar" value="0" min="0" max="1000" style="visibility: hidden;">
+            <button id="play" style="visibility: hidden;">&#9654;</button>
+            <button id="prev-frame_video" style="visibility: hidden;">&laquo;</button><button id="next-frame_video" style="visibility: hidden;">&raquo;</button>
+            <input type="range" id="seek_bar" value="0" min="0" max="1000" style="visibility: hidden;" width="500px">
         </div>
 
         <script>
+            var video1_path = document.getElementById('video1_path');
+            var video2_path = document.getElementById('video2_path');
+            var get_video1 = document.getElementById('get_video1');
+            var quit_video1 = document.getElementById('quit_video1');
+            var get_video2 = document.getElementById('get_video2');
+            var quit_video2 = document.getElementById('quit_video2');
             var video1 = document.getElementById('mov1');
             var video2 = document.getElementById('mov2');
             var play_button = document.getElementById('play')
@@ -24,32 +37,51 @@
             var nextFrame_video2 = document.getElementById('next-frame_video2');
             var compare_button = document.getElementById('is_ready_compare');
             var seek_bar = document.getElementById('seek_bar');
-            var frameRate = 1/30;
-
+            var prev_frame_video = document.getElementById('prev-frame_video');
+            var next_frame_video = document.getElementById('next-frame_video');
+            var fps = 30;
+            var compareTimer;
+            var video1_start_currentTime;
+            var video2_start_currentTime;
             var is_ready_compare = false;
-            var upvideo = document.getElementById('upvideo');
 
             video1.onloadedmetadata = function(){
                 //next
                 nextFrame_video1.addEventListener('click',function(){
-                    video1.currentTime = Math.min(video1.duration, video1.currentTime+frameRate);
+                    video1.currentTime = Math.min(video1.duration, video1.currentTime + 1/fps);
                 });
 
                 //prev
                 prevFrame_video1.addEventListener('click',function(){
-                    video1.currentTime = Math.max(0, video1.currentTime-frameRate);
+                    video1.currentTime = Math.max(0, video1.currentTime - 1/fps);
                 });
             }
             video2.onloadedmetadata = function(){
                 //next
                 nextFrame_video2.addEventListener('click',function(){
-                    video2.currentTime = Math.min(video2.duration, video2.currentTime+frameRate);
+                    video2.currentTime = Math.min(video2.duration, video2.currentTime + 1/fps);
                 });
 
                 //prev
                 prevFrame_video2.addEventListener('click',function(){
-                    video2.currentTime = Math.max(0, video2.currentTime-frameRate);
+                    video2.currentTime = Math.max(0, video2.currentTime - 1/fps);
                 });
+            }
+
+            get_video1.onclick = function() {
+                video1.src = video1_path.value;
+            }
+
+            quit_video1.onclick = function() {
+                video1.src = "";
+            }
+
+            get_video2.onclick = function() {
+                video2.src = video2_path.value;
+            }
+
+            quit_video2.onclick = function() {
+                video2.src = "";
             }
 
             play_button.onclick = function() {
@@ -57,20 +89,22 @@
                 if (is_ready_compare) {
                     
                     if (video1.paused && video2.paused) {
+                        
+                        if (seek_bar.value == seek_bar.max) {
+                            seek_bar.value = 0;
+                            video1.currentTime = video1_start_currentTime;
+                            video2.currentTime = video2_start_currentTime;
+                        }
+
                         video1.play();
                         video2.play();
 
-                        return
+                        return;
                     }
                 }
 
                 video1.pause();
                 video2.pause();
-            }
-
-            upvideo.onchange = function() {
-                console.log(upvideo.value);
-                video1.src = upvideo.value;
             }
 
             compare_button.onclick = function() {
@@ -83,12 +117,78 @@
 
                 if (is_ready_compare) {
                     compare_button.style = "color:#ffffff;background-color:#0000ff;";
-                    seek_bar.style = "visibility: visible;"
+                    video1.controls = false;
+                    video2.controls = false;
+                    set_compare_component();
+                    start_timer();
                 } else {
                     compare_button.style = "";
-                    seek_bar.style = "visibility: hidden;"
+                    play_button.style = "visibility: hidden;";
+                    seek_bar.style = "visibility: hidden;";
+                    prev_frame_video.style = "visibility: hidden;";
+                    next_frame_video.style = "visibility: hidden;";
+                    video1.controls = true;
+                    video2.controls = true;
+                    end_timer();
                 }
             }
+
+            prev_frame_video.onclick = function() {
+                video1.currentTime = Math.max(video1_start_currentTime, video1.currentTime - 1/fps);
+                video2.currentTime = Math.max(video2_start_currentTime, video2.currentTime - 1/fps);
+            }
+
+            next_frame_video.onclick = function() {
+                video1.currentTime = Math.min(video1.duration, video1.currentTime + 1/fps);
+                video2.currentTime = Math.min(video2.duration, video2.currentTime + 1/fps);
+            }
+
+            seek_bar.oninput = function() {
+                video1.currentTime = video1_start_currentTime + (seek_bar.value / fps);
+                video2.currentTime = video2_start_currentTime + (seek_bar.value / fps);
+            }
+
+            function set_compare_component() {
+                /*
+                  create seek bar.
+                  when pushed "compare" button, compare the rest time in 2 videos
+                  then seek_bar.max get smaller one.
+                */
+                seek_bar.value = "0";
+                seek_bar.style = "visibility: visible;"
+                rest_time_video1 = video1.duration - video1.currentTime;
+                rest_time_video2 = video2.duration - video2.currentTime;
+                seek_bar.max = rest_time_video1 <= rest_time_video2 ? Math.floor(rest_time_video1*fps) : Math.floor(rest_time_video2*fps);
+
+                /*
+                  create play button, prev frame button, and next frame button.
+                */
+                play_button.style = "visibility: visible;";
+                prev_frame_video.style = "visibility: visible;";
+                next_frame_video.style = "visibility: visible;";
+            }
+
+            seek_bar.ended = function() {
+                console.log("end");
+            }
+
+            function start_timer() {
+                video1_start_currentTime = video1.currentTime;
+                video2_start_currentTime = video2.currentTime;
+                 
+                compareTimer = setInterval(function(){
+                    seek_bar.value = (video1.currentTime - video1_start_currentTime) * fps;
+                    if (seek_bar.value == seek_bar.max) {
+                        video1.pause();
+                        video2.pause();
+                    }
+                }, 10);
+            }
+
+            function end_timer() {
+                clearInterval(compareTimer);
+            }
+
         </script>
     </body>
 </html>
